@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Corde; 
 use App\Models\Municipio; 
 use App\Models\Plantel; 
-use App\Models\Corde; 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule; 
 
@@ -21,38 +21,47 @@ class PlantelController extends Controller
 
     public function store(Request $request)
     {
-        $this->limpiarCct($request);
+        $this->limpiarCct($request); 
+        $datos=$request->validate($this->reglas()); 
 
-        $datos = $request->validate([
-            'cct'=>'required|string|size:10|unique:planteles,cct', 
-            'nombre_escuela'=>'required|string|max:255', 
-            'localidad_id'=>'nullable|exists:localidades,id', 
-            'corde_id' => 'nullable|exists:cordes,id',
-        ]);
+        $plantel = Plantel::create($datos);
 
-        $plantel = Plantel::create($datos); 
-        return response()->json(['plantel' => $plantel->load(['localidad.municipio', 'corde'])], 201);
+        return response()->json(['plantel'=>$plantel->load(['localidad.municipio', 'corde'])], 201); 
+
     }
 
     public function update(Request $request, Plantel $plantel)
     {
-        $this->limpiarCct($request);
-
-        $datos = $request->validate([
-            'cct' => ['required', 'string', 'size:10', Rule::unique('planteles', 'cct')->ignore($plantel->id)],
-            'nombre_escuela'=>'required|string|max:255', 
-            'localidad_id'=>'nullable|exists:localidades,id', 
-            'corde_id' => 'nullable|exists:cordes,id',
-        ]);
+        $this->limpiarCct($request); 
+        $datos = $request->validate($this->reglas($plantel->id)); 
 
         $plantel->update($datos); 
-        return response()->json(['plantel' => $plantel->load('localidad.municipio', 'corde')]);
+
+        return response() ->json(['plantel'=>$plantel->load(['localidad.municipio', 'corde'])]); 
     }
 
     public function destroy(Plantel $plantel)
     {
-        $plantel->delete();
-        return response()->json(['mensaje' => 'Plantel eliminado']);
+        $plantel->delete(); 
+        return response()->json(['mensaje'=>'Plantel eliminado']); 
+    }
+
+    public function reglas($id=null): array
+    {
+        return [ 
+            'cct' => ['required', 'string', 'size:10', Rule::unique('planteles', 'cct')->ignore($id)],
+            'nombre_escuela'=>'required|string|max:255', 
+            'localidad_id' => 'nullable|exists:localidades,id', 
+            'corde_id' => 'nullable|exists:cordes,id',
+            'turno' => 'nullable|string|max:50', 
+            'nivel_educativo'=>'nullable|string|max:100', 
+            'sostenimiento'=>'nullable|string|max:100', 
+            'domicilio_calle_numero'=>'nullable|string|max:255', 
+            'domicilio_colonia'=>'nullable|string|max:255', 
+            'domicilio_cp'=>'nullable|digits:5', 
+            'telefono_plantel'=>'nullable|string|max:50', 
+            'correo_institucional'=>'nullable|email|max:255', 
+        ]; 
     }
 
     private function limpiarCct(Request $request): void 

@@ -10,23 +10,77 @@
 
     <form v-if="formulario" class="form" @submit.prevent="guardar">
       <h3>{{ form.id ? 'Editar plantel' : 'Nuevo plantel' }}</h3>
-      <input v-model="form.cct" class="mayus" placeholder="CCT (ej. 21DPR0001K)" maxlength="10" required />
-      <input v-model="form.nombre_escuela" placeholder="Nombre de la escuela" required />
 
-      <select v-model="form.municipio_id" @change="form.localidad_id = null">
-        <option :value="null">-- Municipio --</option>
-        <option v-for="m in municipios" :key="m.id" :value="m.id">{{ m.nombre }}</option>
-      </select>
+      <p class="grupo">Datos generales</p>
+      <div class="rejilla">
+        <label>CCT *
+          <input v-model="form.cct" class="mayus" placeholder="21DPR0001K" maxlength="10" required />
+        </label>
+        <label>Nombre de la escuela *
+          <input v-model="form.nombre_escuela" required />
+        </label>
+        <label>Nivel educativo
+          <input v-model="form.nivel_educativo" list="lista-niveles" maxlength="100" />
+        </label>
+        <label>Turno
+          <input v-model="form.turno" list="lista-turnos" maxlength="50" />
+        </label>
+        <label>Sostenimiento
+          <input v-model="form.sostenimiento" list="lista-sostenimientos" maxlength="100" />
+        </label>
+        <label>CORDE
+          <select v-model="form.corde_id">
+            <option :value="null">-- Sin CORDE --</option>
+            <option v-for="c in cordes" :key="c.id" :value="c.id">{{ c.clave_corde }} - {{ c.nombre_corde }}</option>
+          </select>
+        </label>
+      </div>
 
-      <select v-model="form.localidad_id" :disabled="!form.municipio_id">
-        <option :value="null">-- Localidad --</option>
-        <option v-for="l in localidadesDelMunicipio" :key="l.id" :value="l.id">{{ l.nombre }}</option>
-      </select>
+      <p class="grupo">Ubicación</p>
+      <div class="rejilla">
+        <label>Municipio
+          <select v-model="form.municipio_id" @change="form.localidad_id = null">
+            <option :value="null">-- Municipio --</option>
+            <option v-for="m in municipios" :key="m.id" :value="m.id">{{ m.nombre }}</option>
+          </select>
+        </label>
+        <label>Localidad
+          <select v-model="form.localidad_id" :disabled="!form.municipio_id">
+            <option :value="null">-- Localidad --</option>
+            <option v-for="l in localidadesDelMunicipio" :key="l.id" :value="l.id">{{ l.nombre }}</option>
+          </select>
+        </label>
+        <label>Calle y número
+          <input v-model="form.domicilio_calle_numero" maxlength="255" />
+        </label>
+        <label>Colonia
+          <input v-model="form.domicilio_colonia" maxlength="255" />
+        </label>
+        <label>Código postal
+          <input v-model="form.domicilio_cp" maxlength="5" inputmode="numeric" placeholder="75700" />
+        </label>
+      </div>
 
-      <select v-model="form.corde_id">
-        <option :value="null">-- CORDE --</option>
-        <option v-for="c in cordes" :key="c.id" :value="c.id">{{ c.clave_corde }} - {{ c.nombre_corde }}</option>
-      </select>
+      <p class="grupo">Contacto</p>
+      <div class="rejilla">
+        <label>Teléfono
+          <input v-model="form.telefono_plantel" maxlength="50" />
+        </label>
+        <label>Correo institucional
+          <input v-model="form.correo_institucional" type="email" maxlength="255" />
+        </label>
+      </div>
+
+      <!-- Sugerencias para los campos con lista -->
+      <datalist id="lista-niveles">
+        <option v-for="n in niveles" :key="n" :value="n" />
+      </datalist>
+      <datalist id="lista-turnos">
+        <option v-for="t in turnos" :key="t" :value="t" />
+      </datalist>
+      <datalist id="lista-sostenimientos">
+        <option v-for="s in sostenimientos" :key="s" :value="s" />
+      </datalist>
 
       <div class="botones">
         <button type="submit" :disabled="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
@@ -34,42 +88,60 @@
       </div>
     </form>
 
-    <input v-model="buscar" class="buscar" placeholder="Buscar por CCT, nombre, municipio, localidad o CORDE..." />
+    <input v-model="buscar" class="buscar" placeholder="Buscar por CCT, nombre, nivel, municipio, localidad o CORDE..." />
 
     <p v-if="cargando">Cargando...</p>
     <p v-else-if="!filtrados.length" class="vacio">No hay planteles.</p>
 
-    <table v-else>
-      <thead>
-        <tr>
-          <th>CCT</th>
-          <th>Nombre de la escuela</th>
-          <th>Municipio</th>
-          <th>Localidad</th>
-          <th>CORDE</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="p in filtrados" :key="p.id">
-          <td><strong>{{ p.cct }}</strong></td>
-          <td>{{ p.nombre_escuela }}</td>
-          <td>{{ p.localidad?.municipio?.nombre || '—' }}</td>
-          <td>{{ p.localidad?.nombre || '—' }}</td>
-          <td>{{ p.corde?.nombre_corde || '—' }}</td>
-          <td class="acciones">
-            <button class="chico" @click="editar(p)">Editar</button>
-            <button class="chico rojo" @click="eliminar(p)">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>CCT</th>
+            <th>Nombre de la escuela</th>
+            <th>Nivel</th>
+            <th>Turno</th>
+            <th>Municipio</th>
+            <th>Localidad</th>
+            <th>CORDE</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="p in filtrados" :key="p.id">
+            <td><strong>{{ p.cct }}</strong></td>
+            <td>{{ p.nombre_escuela }}</td>
+            <td>{{ p.nivel_educativo || '—' }}</td>
+            <td>{{ p.turno || '—' }}</td>
+            <td>{{ p.localidad?.municipio?.nombre || '—' }}</td>
+            <td>{{ p.localidad?.nombre || '—' }}</td>
+            <td>{{ p.corde?.nombre_corde || '—' }}</td>
+            <td class="acciones">
+              <button class="chico" @click="editar(p)">Editar</button>
+              <button class="chico rojo" @click="eliminar(p)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { api } from '../api';
+
+// Sugerencias (puedes cambiarlas o agregar más)
+const niveles = ['Inicial', 'Preescolar', 'Primaria', 'Secundaria', 'Media superior', 'Superior', 'Educación especial'];
+const turnos = ['Matutino', 'Vespertino', 'Nocturno', 'Discontinuo', 'Tiempo completo'];
+const sostenimientos = ['Federal', 'Estatal', 'Federalizado', 'Particular', 'Autónomo'];
+
+// Campos del formulario (se usa para crear el form vacío y para editar)
+const CAMPOS = [
+  'cct', 'nombre_escuela', 'turno', 'nivel_educativo', 'sostenimiento',
+  'domicilio_calle_numero', 'domicilio_colonia', 'domicilio_cp',
+  'telefono_plantel', 'correo_institucional', 'localidad_id', 'corde_id',
+];
 
 const planteles = ref([]);
 const municipios = ref([]);
@@ -91,7 +163,9 @@ const localidadesDelMunicipio = computed(() => {
 const filtrados = computed(() => {
   const t = buscar.value.toLowerCase();
   return planteles.value.filter(p =>
-    [p.cct, p.nombre_escuela, p.localidad?.nombre, p.localidad?.municipio?.nombre, p.corde?.nombre_corde, p.corde?.clave_corde]
+    [p.cct, p.nombre_escuela, p.nivel_educativo, p.turno,
+     p.localidad?.nombre, p.localidad?.municipio?.nombre,
+     p.corde?.nombre_corde, p.corde?.clave_corde]
       .some(v => (v || '').toLowerCase().includes(t))
   );
 });
@@ -117,29 +191,20 @@ async function cargar() {
 onMounted(cargar);
 
 function nuevo() {
-  form.value = {
-    id: null,
-    cct: '',
-    nombre_escuela: '',
-    municipio_id: null,
-    localidad_id: null,
-    corde_id: null,
-  };
+  const vacio = { id: null, municipio_id: null };
+  CAMPOS.forEach(c => (vacio[c] = c.endsWith('_id') ? null : ''));
+  form.value = vacio;
   error.value = exito.value = '';
   formulario.value = true;
 }
 
 function editar(p) {
-  form.value = {
-    id: p.id,
-    cct: p.cct,
-    nombre_escuela: p.nombre_escuela,
-    municipio_id: p.localidad?.municipio_id ?? null,
-    localidad_id: p.localidad_id,
-    corde_id: p.corde_id,
-  };
+  const datos = { id: p.id, municipio_id: p.localidad?.municipio_id ?? null };
+  CAMPOS.forEach(c => (datos[c] = p[c] ?? (c.endsWith('_id') ? null : '')));
+  form.value = datos;
   error.value = exito.value = '';
   formulario.value = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function guardar() {
@@ -186,13 +251,17 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .gris { background: #999; }
 .rojo { background: #e74c3c; }
 .chico { padding: 4px 10px; font-size: 12px; margin-left: 4px; }
-.form { background: #f8f8f8; padding: 14px; border-radius: 8px; margin: 12px 0; }
-.form input, .form select, .buscar { width: 100%; box-sizing: border-box; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; }
+.form { background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 12px 0; }
+.grupo { font-size: 13px; font-weight: bold; color: #42b883; margin: 14px 0 6px; text-transform: uppercase; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 14px; }
+label { display: block; font-size: 13px; color: #555; }
+.form input, .form select, .buscar { width: 100%; box-sizing: border-box; padding: 8px; margin: 4px 0 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
 .form select { cursor: pointer; }
 .form select:disabled { background: #eee; cursor: not-allowed; }
 .mayus { text-transform: uppercase; }
 .buscar { margin-top: 12px; }
-.botones { display: flex; gap: 8px; }
+.botones { display: flex; gap: 8px; margin-top: 6px; }
+.tabla-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
 .acciones { white-space: nowrap; text-align: right; }
