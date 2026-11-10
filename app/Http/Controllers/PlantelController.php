@@ -61,6 +61,15 @@ class PlantelController extends Controller
             'domicilio_cp'=>'nullable|digits:5', 
             'telefono_plantel'=>'nullable|string|max:50', 
             'correo_institucional'=>'nullable|email|max:255', 
+            'accesibilidad_rampas'=>'boolean', 
+            'accesibilidad_banos_adaptados'=>'boolean', 
+            'accesibilidad_senaletica_braille'=>'boolean', 
+            'accesibilidad_otros'=>'nullable|string|max:2000', 
+            'total_alumnos'=>'required|integer|min:0', 
+            'total_docentes'=>'required|integer|min:0', 
+            'total_administrativos'=>'required|integer|min:0', 
+            'latitud'=>'nullable|numeric|between:-90,90', 
+            'longitud'=>'nullable|numeric|between:-180,180', 
         ]; 
     }
 

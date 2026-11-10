@@ -2,91 +2,134 @@
   <div class="seccion">
     <div class="encabezado">
       <h2>Planteles</h2>
-      <button v-if="!formulario" @click="nuevo">+ Nuevo plantel</button>
+      <button @click="nuevo">+ Nuevo plantel</button>
     </div>
 
-    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="error && !formulario" class="error">{{ error }}</div>
     <div v-if="exito" class="exito">{{ exito }}</div>
 
-    <form v-if="formulario" class="form" @submit.prevent="guardar">
-      <h3>{{ form.id ? 'Editar plantel' : 'Nuevo plantel' }}</h3>
+    <!-- Modal con el formulario -->
+    <div v-if="formulario" class="modal-fondo" @click.self="formulario = false">
+      <div class="modal">
+        <form class="form" @submit.prevent="guardar">
+          <h3>{{ form.id ? 'Editar plantel' : 'Nuevo plantel' }}</h3>
+          <div v-if="error" class="error">{{ error }}</div>
 
-      <p class="grupo">Datos generales</p>
-      <div class="rejilla">
-        <label>CCT *
-          <input v-model="form.cct" class="mayus" placeholder="21DPR0001K" maxlength="10" required />
-        </label>
-        <label>Nombre de la escuela *
-          <input v-model="form.nombre_escuela" required />
-        </label>
-        <label>Nivel educativo
-          <input v-model="form.nivel_educativo" list="lista-niveles" maxlength="100" />
-        </label>
-        <label>Turno
-          <input v-model="form.turno" list="lista-turnos" maxlength="50" />
-        </label>
-        <label>Sostenimiento
-          <input v-model="form.sostenimiento" list="lista-sostenimientos" maxlength="100" />
-        </label>
-        <label>CORDE
-          <select v-model="form.corde_id">
-            <option :value="null">-- Sin CORDE --</option>
-            <option v-for="c in cordes" :key="c.id" :value="c.id">{{ c.clave_corde }} - {{ c.nombre_corde }}</option>
-          </select>
-        </label>
+          <p class="grupo">Datos generales</p>
+          <div class="rejilla">
+            <label>CCT *
+              <input v-model="form.cct" class="mayus" placeholder="21DPR0001K" maxlength="10" required />
+            </label>
+            <label>Nombre de la escuela *
+              <input v-model="form.nombre_escuela" required />
+            </label>
+            <label>Nivel educativo
+              <input v-model="form.nivel_educativo" list="lista-niveles" maxlength="100" />
+            </label>
+            <label>Turno
+              <input v-model="form.turno" list="lista-turnos" maxlength="50" />
+            </label>
+            <label>Sostenimiento
+              <input v-model="form.sostenimiento" list="lista-sostenimientos" maxlength="100" />
+            </label>
+            <label>CORDE
+              <select v-model="form.corde_id">
+                <option :value="null">-- Sin CORDE --</option>
+                <option v-for="c in cordes" :key="c.id" :value="c.id">{{ c.clave_corde }} - {{ c.nombre_corde }}</option>
+              </select>
+            </label>
+          </div>
+
+          <p class="grupo">Ubicación</p>
+          <div class="rejilla">
+            <label>Municipio
+              <select v-model="form.municipio_id" @change="form.localidad_id = null">
+                <option :value="null">-- Municipio --</option>
+                <option v-for="m in municipios" :key="m.id" :value="m.id">{{ m.nombre }}</option>
+              </select>
+            </label>
+            <label>Localidad
+              <select v-model="form.localidad_id" :disabled="!form.municipio_id">
+                <option :value="null">-- Localidad --</option>
+                <option v-for="l in localidadesDelMunicipio" :key="l.id" :value="l.id">{{ l.nombre }}</option>
+              </select>
+            </label>
+            <label>Calle y número
+              <input v-model="form.domicilio_calle_numero" maxlength="255" />
+            </label>
+            <label>Colonia
+              <input v-model="form.domicilio_colonia" maxlength="255" />
+            </label>
+            <label>Código postal
+              <input v-model="form.domicilio_cp" maxlength="5" inputmode="numeric" placeholder="75700" />
+            </label>
+          </div>
+
+          <p class="grupo">Contacto</p>
+          <div class="rejilla">
+            <label>Teléfono
+              <input v-model="form.telefono_plantel" maxlength="50" />
+            </label>
+            <label>Correo institucional
+              <input v-model="form.correo_institucional" type="email" maxlength="255" />
+            </label>
+          </div>
+
+          <p class="grupo">Accesibilidad</p>
+          <div class="casillas">
+            <label class="casilla"><input type="checkbox" v-model="form.accesibilidad_rampas" /> Rampas</label>
+            <label class="casilla"><input type="checkbox" v-model="form.accesibilidad_banos_adaptados" /> Baños adaptados</label>
+            <label class="casilla"><input type="checkbox" v-model="form.accesibilidad_senaletica_braille" /> Señalética Braille</label>
+          </div>
+          <label>Otros
+            <textarea v-model="form.accesibilidad_otros" rows="2" maxlength="2000" placeholder="Otras adecuaciones de accesibilidad..."></textarea>
+          </label>
+          <!--Planteles-->
+          <p class="grupo">Personal y matrícula</p>
+          <div class="rejilla">
+            <label>Total de alumnos
+              <input v-model.number="form.total_alumnos" type="number" min="0" required />
+            </label>
+            <label>Total de docentes
+              <input v-model.number="form.total_docentes" type="number" min="0" required />
+            </label>
+            <label>Total de administrativos
+              <input v-model.number="form.total_administrativos" type="number" min="0" required />
+            </label>
+          </div>
+
+          <a a v-if="form.latitud && form.longitud"
+              :href="`https://www.google.com/maps?q=${form.latitud},${form.longitud}`"
+              target="_blank" class="mapa">Ver Ubicaion en Google Maps</a>
+
+          <p class="grupo">Coordenadas</p>
+          <div class="rejilla">
+            <label>Latitud
+              <input v-model="form.longitud" type="number" step="any" min="-180" max="180" placeholder="-97.3930" />
+            </label>
+            <label>Longitud
+              <input v-model="form.longitud" type="number" step="any" min="-180" max="180" placeholder="-97.3930" />
+            </label>
+          </div>
+
+          <!-- Sugerencias para los campos con lista -->
+          <datalist id="lista-niveles">
+            <option v-for="n in niveles" :key="n" :value="n" />
+          </datalist>
+          <datalist id="lista-turnos">
+            <option v-for="t in turnos" :key="t" :value="t" />
+          </datalist>
+          <datalist id="lista-sostenimientos">
+            <option v-for="s in sostenimientos" :key="s" :value="s" />
+          </datalist>
+
+          <div class="botones">
+            <button type="submit" :disabled="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+            <button type="button" class="gris" @click="formulario = false">Cancelar</button>
+          </div>
+        </form>
       </div>
-
-      <p class="grupo">Ubicación</p>
-      <div class="rejilla">
-        <label>Municipio
-          <select v-model="form.municipio_id" @change="form.localidad_id = null">
-            <option :value="null">-- Municipio --</option>
-            <option v-for="m in municipios" :key="m.id" :value="m.id">{{ m.nombre }}</option>
-          </select>
-        </label>
-        <label>Localidad
-          <select v-model="form.localidad_id" :disabled="!form.municipio_id">
-            <option :value="null">-- Localidad --</option>
-            <option v-for="l in localidadesDelMunicipio" :key="l.id" :value="l.id">{{ l.nombre }}</option>
-          </select>
-        </label>
-        <label>Calle y número
-          <input v-model="form.domicilio_calle_numero" maxlength="255" />
-        </label>
-        <label>Colonia
-          <input v-model="form.domicilio_colonia" maxlength="255" />
-        </label>
-        <label>Código postal
-          <input v-model="form.domicilio_cp" maxlength="5" inputmode="numeric" placeholder="75700" />
-        </label>
-      </div>
-
-      <p class="grupo">Contacto</p>
-      <div class="rejilla">
-        <label>Teléfono
-          <input v-model="form.telefono_plantel" maxlength="50" />
-        </label>
-        <label>Correo institucional
-          <input v-model="form.correo_institucional" type="email" maxlength="255" />
-        </label>
-      </div>
-
-      <!-- Sugerencias para los campos con lista -->
-      <datalist id="lista-niveles">
-        <option v-for="n in niveles" :key="n" :value="n" />
-      </datalist>
-      <datalist id="lista-turnos">
-        <option v-for="t in turnos" :key="t" :value="t" />
-      </datalist>
-      <datalist id="lista-sostenimientos">
-        <option v-for="s in sostenimientos" :key="s" :value="s" />
-      </datalist>
-
-      <div class="botones">
-        <button type="submit" :disabled="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
-        <button type="button" class="gris" @click="formulario = false">Cancelar</button>
-      </div>
-    </form>
+    </div>
 
     <input v-model="buscar" class="buscar" placeholder="Buscar por CCT, nombre, nivel, municipio, localidad o CORDE..." />
 
@@ -136,12 +179,17 @@ const niveles = ['Inicial', 'Preescolar', 'Primaria', 'Secundaria', 'Media super
 const turnos = ['Matutino', 'Vespertino', 'Nocturno', 'Discontinuo', 'Tiempo completo'];
 const sostenimientos = ['Federal', 'Estatal', 'Federalizado', 'Particular', 'Autónomo'];
 
-// Campos del formulario (se usa para crear el form vacío y para editar)
+// Campos del formulario
 const CAMPOS = [
   'cct', 'nombre_escuela', 'turno', 'nivel_educativo', 'sostenimiento',
   'domicilio_calle_numero', 'domicilio_colonia', 'domicilio_cp',
   'telefono_plantel', 'correo_institucional', 'localidad_id', 'corde_id',
+  'accesibilidad_rampas', 'accesibilidad_banos_adaptados',
+  'accesibilidad_senaletica_braille', 'accesibilidad_otros',
 ];
+
+// Campos sí/no
+const BOOLEANOS = ['accesibilidad_rampas', 'accesibilidad_banos_adaptados', 'accesibilidad_senaletica_braille'];
 
 const planteles = ref([]);
 const municipios = ref([]);
@@ -190,9 +238,16 @@ async function cargar() {
 
 onMounted(cargar);
 
+// Valor inicial de cada campo: false para casillas, null para ids, '' para texto
+function valorInicial(campo, p = {}) {
+  if (BOOLEANOS.includes(campo)) return !!p[campo];
+  if (campo.endsWith('_id')) return p[campo] ?? null;
+  return p[campo] ?? '';
+}
+
 function nuevo() {
   const vacio = { id: null, municipio_id: null };
-  CAMPOS.forEach(c => (vacio[c] = c.endsWith('_id') ? null : ''));
+  CAMPOS.forEach(c => (vacio[c] = valorInicial(c)));
   form.value = vacio;
   error.value = exito.value = '';
   formulario.value = true;
@@ -200,11 +255,10 @@ function nuevo() {
 
 function editar(p) {
   const datos = { id: p.id, municipio_id: p.localidad?.municipio_id ?? null };
-  CAMPOS.forEach(c => (datos[c] = p[c] ?? (c.endsWith('_id') ? null : '')));
+  CAMPOS.forEach(c => (datos[c] = valorInicial(c, p)));
   form.value = datos;
   error.value = exito.value = '';
   formulario.value = true;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function guardar() {
@@ -251,20 +305,28 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .gris { background: #999; }
 .rojo { background: #e74c3c; }
 .chico { padding: 4px 10px; font-size: 12px; margin-left: 4px; }
-.form { background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 12px 0; }
 .grupo { font-size: 13px; font-weight: bold; color: #42b883; margin: 14px 0 6px; text-transform: uppercase; }
 .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 14px; }
 label { display: block; font-size: 13px; color: #555; }
 .form input, .form select, .buscar { width: 100%; box-sizing: border-box; padding: 8px; margin: 4px 0 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
 .form select { cursor: pointer; }
 .form select:disabled { background: #eee; cursor: not-allowed; }
+.form textarea { width: 100%; box-sizing: border-box; padding: 8px; margin: 4px 0 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical; }
 .mayus { text-transform: uppercase; }
 .buscar { margin-top: 12px; }
 .botones { display: flex; gap: 8px; margin-top: 6px; }
+.casillas { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 10px; }
+.casilla { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #333; cursor: pointer; }
+.casilla input { width: auto; margin: 0; cursor: pointer; }
 .tabla-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
 .acciones { white-space: nowrap; text-align: right; }
 .vacio { color: #777; text-align: center; }
 .exito { background: #e6f7ef; color: #2d8a5f; padding: 8px; border-radius: 6px; margin: 10px 0; font-size: 14px; }
+
+/* Modal */
+.modal-fondo { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 100; }
+.modal { background: #fff; border-radius: 10px; width: 100%; max-width: 900px; box-shadow: 0 10px 30px rgba(0, 0, 0, .2); }
+.form { padding: 24px; }
 </style>
