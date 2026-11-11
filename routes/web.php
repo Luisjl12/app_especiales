@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsuarioController; 
 use App\Http\Controllers\PlantelController; 
+use App\Http\Controllers\ImportarPlantelesController; 
 
 Route::get('/', fn () =>view('app')); 
 
@@ -21,6 +22,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function(){
     Route::post('/planteles', [PlantelController::class, 'store']); 
     Route::put('/planteles/{plantel}', [PlantelController::class, 'update']); 
     Route::delete('/planteles/{plantel}', [PlantelController::class, 'destroy']); 
+    Route::get('/planteles/plantilla', [ImportarPlantelesController::class, 'plantilla']);
+    Route::post('/planteles/importar', [ImportarPlantelesController::class, 'importar']);
 });
 
 Route::get('/{any}', fn() => view('app'))->where('any', '.*');

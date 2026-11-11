@@ -20,3 +20,19 @@ export async function api(url, method = 'GET', body = null) {
   if (!res.ok) throw datos;
   return datos;
 }
+
+export async function apiArchivo(url, formData)
+{
+  const res=await fetch(url,{
+    method: 'POST', 
+    headers: {
+      'Accept': 'application/json', 
+      'X-CSRF-TOKEN': token,
+    }, 
+    body: formData, 
+  }); 
+  
+  const datos = await res.json().catch(() => ({}));
+  if (!res.ok) throw datos;
+  return datos;
+}

@@ -2,8 +2,26 @@
   <div class="seccion">
     <div class="encabezado">
       <h2>Planteles</h2>
-      <button @click="nuevo">+ Nuevo plantel</button>
+      <div class="acciones-top">
+        <a href="/admin/planteles/plantilla" class="boton-link">⬇ Plantilla</a>
+        <button class="azul" :disabled="importando" @click="archivo.click()">
+          {{ importando ? 'Importando...' : '⬆ Importar Excel' }}
+        </button>
+        <button @click="nuevo">+ Nuevo plantel</button>
+      </div>
+      <input ref="archivo" type="file" accept=".xlsx,.xls,.csv" hidden @change="importar" />
     </div>
+
+    <!-- Resultado de la importación -->
+  <div v-if="resultado" class="resultado">
+    <strong>Importación terminada:</strong>
+    {{ resultado.creados }} nuevos, {{ resultado.actualizados }} actualizados,
+    {{ resultado.errores.length }} con error.
+    <ul v-if="resultado.errores.length">
+      <li v-for="e in resultado.errores" :key="e.fila">Fila {{ e.fila }}: {{ e.mensaje }}</li>
+    </ul>
+    <button class="chico gris" @click="resultado = null">Cerrar</button>
+  </div>
 
     <div v-if="error && !formulario" class="error">{{ error }}</div>
     <div v-if="exito" class="exito">{{ exito }}</div>
@@ -172,7 +190,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { api } from '../api';
+import { api, apiArchivo  } from '../api';
 
 // Sugerencias (puedes cambiarlas o agregar más)
 const niveles = ['Inicial', 'Preescolar', 'Primaria', 'Secundaria', 'Media superior', 'Superior', 'Educación especial'];
@@ -201,6 +219,9 @@ const exito = ref('');
 const formulario = ref(false);
 const form = ref({});
 const buscar = ref('');
+const archivo = ref(null);
+const importando = ref(false);
+const resultado = ref(null);
 
 // Solo las localidades del municipio elegido
 const localidadesDelMunicipio = computed(() => {
@@ -292,6 +313,27 @@ async function eliminar(p) {
     error.value = mensajeError(e, 'No se pudo eliminar');
   }
 }
+
+async function importar(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+
+  error.value = exito.value = '';
+  resultado.value = null;
+  importando.value = true;
+
+  try {
+    const fd = new FormData();
+    fd.append('archivo', file);
+    resultado.value = await apiArchivo('/admin/planteles/importar', fd);
+    await cargar();
+  } catch (e) {
+    error.value = mensajeError(e, 'No se pudo importar el archivo');
+  } finally {
+    importando.value = false;
+    ev.target.value = ''; // permite volver a subir el mismo archivo
+  }
+}
 </script>
 
 <style scoped>
@@ -329,4 +371,10 @@ th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
 .modal-fondo { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 100; }
 .modal { background: #fff; border-radius: 10px; width: 100%; max-width: 900px; box-shadow: 0 10px 30px rgba(0, 0, 0, .2); }
 .form { padding: 24px; }
+.acciones-top { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.azul { background: #3498db; }
+.boton-link { background: #7f8c8d; color: #fff; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 14px; }
+.boton-link:hover { opacity: .9; }
+.resultado { background: #eef6fd; border: 1px solid #cfe3f7; padding: 12px; border-radius: 6px; margin: 10px 0; font-size: 14px; }
+.resultado ul { margin: 8px 0; padding-left: 20px; color: #c0392b; max-height: 200px; overflow-y: auto; }
 </style>
