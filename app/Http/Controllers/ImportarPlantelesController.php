@@ -199,7 +199,7 @@ class ImportarPlantelesController extends Controller
             $valor=trim($valor); 
         }
 
-        return $valor=== '' ? null : $valor;
+        return $valor === '' ? null : $valor;
     }
 
     private function normalizar(array $d):array

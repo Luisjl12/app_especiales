@@ -19,6 +19,8 @@ const todas = [
   { ruta: '/proyectos', titulo: 'Proyectos', descripcion: 'Ver y administrar proyectos'},
   { ruta: '/usuarios',  titulo: 'Usuarios',  descripcion: 'Gestión de usuarios y roles',  admin: true },
   { ruta: '/planteles', titulo: 'Planteles', descripcion: 'Gestión de planteles y CCT',  admin: true },
+  { ruta: '/municipios', titulo: 'Municipios', descripcion: 'Catálogo de municipios y localidades', admin: true },
+  { ruta: '/localidades', titulo: 'Localidades', descripcion: 'Alta, edición y baja de localidades', admin:true}, 
 ];
 
 const secciones = computed(() =>

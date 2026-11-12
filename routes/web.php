@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsuarioController; 
 use App\Http\Controllers\PlantelController; 
 use App\Http\Controllers\ImportarPlantelesController; 
+use App\Http\Controllers\MunicipioController; 
+use App\Http\Controllers\LocalidadController; 
 
 Route::get('/', fn () =>view('app')); 
 
@@ -24,6 +26,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function(){
     Route::delete('/planteles/{plantel}', [PlantelController::class, 'destroy']); 
     Route::get('/planteles/plantilla', [ImportarPlantelesController::class, 'plantilla']);
     Route::post('/planteles/importar', [ImportarPlantelesController::class, 'importar']);
+    Route::get('/municipios', [MunicipioController::class, 'index']); 
+    Route::get('/municipios/plantilla', [MunicipioController::class, 'plantilla']); 
+    Route::post('/municipios/importar', [MunicipioController::class, 'importar']);
+    Route::get('/localidades/municipios', [LocalidadController::class, 'municipios']);
+    Route::get('/localidades', [LocalidadController::class, 'index']);
+    Route::post('/localidades', [LocalidadController::class, 'store']);
+    Route::put('/localidades/{localidad}', [LocalidadController::class, 'update']);
+    Route::delete('/localidades/{localidad}', [LocalidadController::class, 'destroy']);
 });
 
 Route::get('/{any}', fn() => view('app'))->where('any', '.*');

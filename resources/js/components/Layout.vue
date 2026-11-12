@@ -6,6 +6,8 @@
       <router-link to="/proyectos">Proyectos</router-link>
       <router-link v-if="sesion.usuario.es_admin" to="/usuarios">Usuarios</router-link>
       <router-link v-if="sesion.usuario.es_admin" to="/planteles">Planteles</router-link>
+      <router-link v-if="sesion.usuario.es_admin" to="/municipios">Municipios</router-link>
+      <router-link v-if="sesion.usuario.es_admin" to="/localidades">Localidades</router-link>
     </aside>
 
     <div class="contenido">
